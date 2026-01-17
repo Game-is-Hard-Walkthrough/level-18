@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Game is Hard — Level 18 (Prime time) — Mini Clone</title>
+  <style>
+    :root{
+      --bg1:#0f1419;
+      --bg2:#121b22;
+      --gold:#d7b25b;
+      --muted:rgba(215,178,91,.22);
+      --prime:#42d07a;
+      --danger:#ff4d4d;
+      --text:#e9eef3;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      min-height:100vh;
+      display:grid;
+      place-items:center;
+      background:
+        radial-gradient(1200px 800px at 30% 20%, var(--bg2), var(--bg1));
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+      color:var(--text);
+    }
+    .phone{
+      width:min(420px, 92vw);
+      aspect-ratio: 9 / 19.5;
+      border-radius:22px;
+      padding:18px 16px 22px;
+      position:relative;
+      box-shadow: 0 18px 45px rgba(0,0,0,.55);
+      border:1px solid rgba(255,255,255,.06);
+      background:
+        linear-gradient(135deg, rgba(255,255,255,.04), rgba(255,255,255,.01)),
+        radial-gradient(900px 700px at 70% 30%, rgba(255,255,255,.05), rgba(255,255,255,0));
+      overflow:hidden;
+    }
+    .topbar{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      margin-bottom:10px;
+      opacity:.9;
+    }
+    .menuDot{
+      width:34px; height:34px;
+      border-radius:999px;
+      display:grid; place-items:center;
+      background: rgba(255,255,255,.06);
+      border:1px solid rgba(255,255,255,.08);
+    }
+    .burger{
+      width:16px;
+      height:10px;
+      position:relative;
+    }
+    .burger span{
+      position:absolute; left:0; right:0;
+      height:2px;
+      background: rgba(255,255,255,.7);
+      border-radius:2px;
+    }
+    .burger span:nth-child(1){top:0}
+    .burger span:nth-child(2){top:4px}
+    .burger span:nth-child(3){top:8px}
+
+    h1{
+      margin:40px 0 18px;
+      text-align:center;
+      font-size:44px;
+      letter-spacing:.5px;
+      color:var(--gold);
+      font-weight:800;
+    }
+    .grid{
+      display:grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap:18px 10px;
+      padding: 8px 18px 0;
+      margin-top:8px;
+      user-select:none;
+    }
+    button.num{
+      appearance:none;
+      border:0;
+      background:transparent;
+      font-size:42px;
+      font-weight:800;
+      color:var(--gold);
+      cursor:pointer;
+      padding:10px 0;
+      transition: transform .08s ease, opacity .15s ease, color .18s ease, filter .15s ease;
+      text-shadow: 0 2px 0 rgba(0,0,0,.35);
+    }
+    button.num:active{ transform: scale(.98); }
+
+    button.num.removed{
+      opacity:.16;
+      color:var(--gold);
+      filter: blur(.2px);
+      cursor:default;
+      pointer-events:none;
+    }
+    .hint{
+      position:absolute;
+      right:14px;
+      bottom:14px;
+      width:44px; height:44px;
+      border-radius:999px;
+      display:grid; place-items:center;
+      background: rgba(255,255,255,.06);
+      border:1px solid rgba(255,255,255,.08);
+      opacity:.85;
+    }
+    .hint svg{ width:22px; height:22px; fill: rgba(255,255,255,.75); }
+
+    .status{
+      margin-top:12px;
+      text-align:center;
+      font-size:14px;
+      opacity:.85;
+      line-height:1.35;
+    }
+    .status b{ color: var(--text); }
+
+    /* Win state */
+    .phone.win h1{ color: var(--prime); }
+    .phone.win button.num.prime{
+      color: var(--prime);
+      text-shadow: 0 2px 0 rgba(0,0,0,.35);
+    }
+
+    /* Fail flash */
+    .flash{
+      position:absolute;
+      inset:0;
+      background: rgba(255,77,77,.14);
+      opacity:0;
+      pointer-events:none;
+      transition: opacity .12s ease;
+    }
+    .phone.fail .flash{ opacity:1; }
+
+    .tiny{
+      margin-top:6px;
+      font-size:12px;
+      opacity:.7;
+      text-align:center;
+    }
+    code.k{
+      background: rgba(255,255,255,.06);
+      border:1px solid rgba(255,255,255,.07);
+      padding:2px 6px;
+      border-radius:8px;
+    }
+  </style>
+</head>
+<body>
+  <main class="phone" id="phone">
+    <div class="flash" aria-hidden="true"></div>
+
+    <div class="topbar" aria-hidden="true">
+      <div class="menuDot" title="Menu (non-functional in demo)">
+        <div class="burger">
+          <span></span><span></span><span></span>
+        </div>
+      </div>
+      <div style="width:34px;height:34px;"></div>
+    </div>
+
+    <h1 id="title">prime time!</h1>
+
+    <section class="grid" id="grid" aria-label="Numbers 1 to 20"></section>
+
+    <div class="status" id="status">
+      Click a number. In this clone: <b>non-primes fade</b>. Tap a <b>prime</b> and it resets.
+    </div>
+    <div class="tiny">
+      Win by deleting: <code class="k">1,4,6,8,9,10,12,14,15,16,18,20</code>
+    </div>
+
+    <div class="hint" title="Hint (non-functional in demo)" aria-hidden="true">
+      <!-- simple bulb -->
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M9 21h6v-1H9v1zm3-20C7.9 1 5 3.9 5 7c0 2.2 1.2 4.1 3 5.2V15c0 .6.4 1 1 1h6c.6 0 1-.4 1-1v-2.8c1.8-1.1 3-3 3-5.2 0-3.1-2.9-6-7-6zm2.8 10.4-1.8 1.1V14H11v-1.5l-1.8-1.1C7.9 10.6 7 8.9 7 7c0-2 2.2-4 5-4s5 2 5 4c0 1.9-.9 3.6-2.2 4.4z"/>
+      </svg>
+    </div>
+  </main>
+
+  <script>
+    // Level 18 mini clone: "Prime time"
+    // Core mechanic: remove non-primes, leave primes.
+    // Hard rule in this demo: tapping a prime = instant reset.
+
+    const phone = document.getElementById("phone");
+    const grid = document.getElementById("grid");
+    const status = document.getElementById("status");
+
+    const nums = Array.from({ length: 20 }, (_, i) => i + 1);
+
+    function isPrime(n) {
+      if (n
